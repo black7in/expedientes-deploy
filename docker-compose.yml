@@ -79,7 +79,7 @@ services:
     restart: unless-stopped
     environment:
       DATABASE_URL: postgresql://${DB_USERNAME:-laravel}:${DB_PASSWORD}@postgres:5432/${DB_DATABASE:-expedientes_juridicos}
-      STORAGE_PATH: /storage/documentos
+      STORAGE_PATH: /storage/private/documentos
     volumes:
       - storage_data:/storage:ro
     networks:
