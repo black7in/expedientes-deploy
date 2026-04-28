@@ -1,20 +1,16 @@
 # ─────────────────────────────────────────────────────────────────────────────
 #  DESPLIEGUE EN SERVIDOR — Rosales y Asociados · Sistema de Expedientes
 #
-#  Este archivo es suficiente para levantar todo el sistema.
-#  Docker descarga el código fuente directamente desde GitHub.
-#
 #  Requisitos en el servidor:
 #    - Docker + Docker Compose instalados
+#    - Repos clonados en ~/expedientes-app y ~/expedientes-ai
 #    - Archivo .env con las variables de abajo
 #
 #  Primer despliegue:
-#    docker compose -f docker-compose.server.yml up -d --build
-#    docker compose -f docker-compose.server.yml exec app php artisan db:seed
+#    bash update.sh --seed
 #
-#  Actualizar a nueva versión:
-#    docker compose -f docker-compose.server.yml build --no-cache
-#    docker compose -f docker-compose.server.yml up -d
+#  Actualizar a nueva versión (solo git pull + reinicio):
+#    bash update.sh
 # ─────────────────────────────────────────────────────────────────────────────
 
 services:
@@ -22,10 +18,11 @@ services:
   # ─── Laravel (PHP-FPM) ───────────────────────────────────────────────────────
   app:
     build:
-      context: https://github.com/black7in/expedientes-app.git#develop
+      context: ../expedientes-app
       dockerfile: docker/php/Dockerfile.prod
     container_name: expedientes_app
     restart: unless-stopped
+    command: php-fpm
     volumes:
       # Docker copia los archivos de public/ de la imagen al volumen en el primer arranque
       - public_data:/var/www/html/public
@@ -59,7 +56,7 @@ services:
   # ─── Nginx ───────────────────────────────────────────────────────────────────
   nginx:
     build:
-      context: https://github.com/black7in/expedientes-app.git#develop
+      context: ../expedientes-app
       dockerfile: docker/nginx/Dockerfile
     container_name: expedientes_nginx
     restart: unless-stopped
@@ -76,7 +73,7 @@ services:
   # ─── FastAPI — Servicio IA ────────────────────────────────────────────────────
   ai:
     build:
-      context: https://github.com/black7in/expedientes-ai.git#master
+      context: ../expedientes-ai
       dockerfile: Dockerfile
     container_name: expedientes_ai
     restart: unless-stopped
@@ -94,7 +91,7 @@ services:
   # ─── Queue Worker (procesa documentos subidos) ────────────────────────────────
   queue:
     build:
-      context: https://github.com/black7in/expedientes-app.git#develop
+      context: ../expedientes-app
       dockerfile: docker/php/Dockerfile.prod
     container_name: expedientes_queue
     restart: unless-stopped
