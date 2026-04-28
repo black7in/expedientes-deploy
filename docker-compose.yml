@@ -27,6 +27,8 @@ services:
     container_name: expedientes_app
     restart: unless-stopped
     volumes:
+      # Docker copia los archivos de public/ de la imagen al volumen en el primer arranque
+      - public_data:/var/www/html/public
       - storage_data:/var/www/html/storage/app
     environment:
       APP_ENV: production
@@ -64,6 +66,7 @@ services:
     ports:
       - "${APP_PORT:-80}:80"
     volumes:
+      - public_data:/var/www/html/public:ro
       - storage_data:/var/www/html/storage/app:ro
     networks:
       - juridico_net
@@ -158,3 +161,4 @@ volumes:
   postgres_data:   # datos de la base de datos (persistente)
   redis_data:      # caché y colas (persistente)
   storage_data:    # archivos subidos — compartido entre app, queue, ai y nginx
+  public_data:     # archivos públicos de Laravel (CSS, JS compilado) — compartido con nginx
