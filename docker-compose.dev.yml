@@ -1,0 +1,88 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  DESARROLLO LOCAL — Rosales y Asociados · Sistema de Expedientes
+#
+#  Laravel y Vite corren en local (no en Docker):
+#    cd expedientes-app
+#    php artisan serve        → http://localhost:8000
+#    npm run dev              → HMR en http://localhost:5173
+#    php artisan queue:work   → (solo si pruebas extracción de docs)
+#
+#  Levantar infraestructura base:
+#    docker compose -f docker-compose.dev.yml up -d
+#
+#  Levantar con servicio IA:
+#    docker compose -f docker-compose.dev.yml --profile ai up -d
+#
+#  Build del servicio IA (solo cuando cambia requirements.txt o Dockerfile):
+#    docker compose -f docker-compose.dev.yml build ai
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ─── PostgreSQL 16 + pgvector ─────────────────────────────────────────────────
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: expedientes_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: expedientes_juridicos
+      POSTGRES_USER: laravel
+      POSTGRES_PASSWORD: secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - juridico_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U laravel -d expedientes_juridicos"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ─── Redis ───────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: expedientes_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - juridico_net
+
+  # ─── FastAPI — Servicio IA (solo con --profile ai) ───────────────────────────
+  ai:
+    profiles: ["ai"]
+    build:
+      context: ../expedientes-ai
+      dockerfile: Dockerfile
+    container_name: expedientes_ai
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://laravel:secret@postgres:5432/expedientes_juridicos
+      STORAGE_PATH: /storage/documentos
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      TRANSFORMERS_CACHE: /app/.cache/huggingface
+    volumes:
+      - ../expedientes-app/storage/app/documentos:/storage/documentos:ro
+      - ../expedientes-ai/app:/app/app
+      - huggingface_cache:/app/.cache/huggingface
+      - ../expedientes-app/recursos/leyes:/app/recursos/leyes:ro
+    ports:
+      - "8001:8000"
+    networks:
+      - juridico_net
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+networks:
+  juridico_net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  huggingface_cache:  # modelo multilingual-e5-large (~1.2GB) — persiste entre rebuilds
