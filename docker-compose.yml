@@ -80,8 +80,13 @@ services:
     environment:
       DATABASE_URL: postgresql://${DB_USERNAME:-laravel}:${DB_PASSWORD}@postgres:5432/${DB_DATABASE:-expedientes_juridicos}
       STORAGE_PATH: /storage/private/documentos
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      LLM_BASE_URL: ${LLM_BASE_URL:-}
+      LLM_MODEL: ${LLM_MODEL:-claude-sonnet-4-6}
+      TRANSFORMERS_CACHE: /app/.cache/huggingface
     volumes:
       - storage_data:/storage:ro
+      - huggingface_cache:/app/.cache/huggingface
     networks:
       - juridico_net
     depends_on:
@@ -155,7 +160,8 @@ networks:
     driver: bridge
 
 volumes:
-  postgres_data:   # datos de la base de datos (persistente)
-  redis_data:      # caché y colas (persistente)
-  storage_data:    # archivos subidos — compartido entre app, queue, ai y nginx
-  public_data:     # archivos públicos de Laravel (CSS, JS compilado) — compartido con nginx
+  postgres_data:      # datos de la base de datos (persistente)
+  redis_data:         # caché y colas (persistente)
+  storage_data:       # archivos subidos — compartido entre app, queue, ai y nginx
+  public_data:        # archivos públicos de Laravel (CSS, JS compilado) — compartido con nginx
+  huggingface_cache:  # modelo multilingual-e5-large (~1.2GB) — persiste entre rebuilds
