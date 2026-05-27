@@ -61,7 +61,7 @@ services:
     container_name: expedientes_ai
     restart: unless-stopped
     environment:
-      DATABASE_URL: postgresql://laravel:secret@postgres:5432/expedientes_juridicos
+      DATABASE_URL: postgresql://${DB_USERNAME:-laravel}:${DB_PASSWORD:-secret}@postgres:5432/${DB_DATABASE:-expedientes_juridicos}
       STORAGE_PATH: /storage/documentos
       LLM_PROVIDER: ${LLM_PROVIDER:-anthropic}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
