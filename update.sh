@@ -14,6 +14,7 @@ set -e
 DEPLOY_DIR="$(cd "$(dirname "$0")" && pwd)"
 APP_DIR="$HOME/expedientes-app"
 AI_DIR="$HOME/expedientes-ai"
+TSJ_DIR="$HOME/tsj_jurisprudencia"
 
 BRANCH_APP="develop"
 BRANCH_AI="master"
@@ -33,11 +34,14 @@ cd "$APP_DIR" && git fetch origin && git checkout "$BRANCH_APP" && git pull orig
 echo "→ Pulling expedientes-ai ($BRANCH_AI)..."
 cd "$AI_DIR" && git fetch origin && git checkout "$BRANCH_AI" && git pull origin "$BRANCH_AI"
 
+echo "→ Pulling tsj_jurisprudencia (main)..."
+cd "$TSJ_DIR" && git fetch origin && git checkout main && git pull origin main
+
 echo "→ Rebuilding images (con caché)..."
-cd "$DEPLOY_DIR" && docker compose build app queue nginx ai
+cd "$DEPLOY_DIR" && docker compose build app queue nginx ai tsj
 
 echo "→ Restarting containers..."
-docker compose up -d app queue nginx ai
+docker compose up -d app queue nginx ai tsj tsj_postgres
 
 echo "→ Corriendo migraciones..."
 sleep 5
