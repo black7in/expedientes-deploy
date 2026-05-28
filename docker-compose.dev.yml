@@ -72,6 +72,7 @@ services:
     volumes:
       - ../expedientes-app/storage/app/documentos:/storage/documentos:ro
       - ../expedientes-ai/app:/app/app
+      - ../expedientes-ai/scripts:/app/scripts
       - huggingface_cache:/app/.cache/huggingface
       - ../expedientes-app/recursos/leyes:/app/recursos/leyes:ro
       - ../expedientes-ai/recursos/memoriales:/app/recursos/memoriales:ro
@@ -83,6 +84,48 @@ services:
       postgres:
         condition: service_healthy
 
+  # ─── PostgreSQL para TSJ Jurisprudencia (solo con --profile tsj) ────────────
+  tsj_postgres:
+    profiles: ["tsj"]
+    image: pgvector/pgvector:pg16
+    container_name: tsj_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: tsj
+      POSTGRES_PASSWORD: tsj
+      POSTGRES_DB: tsj_jurisprudencia
+    ports:
+      - "5433:5432"
+    volumes:
+      - tsj_postgres_data:/var/lib/postgresql/data
+    networks:
+      - juridico_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tsj -d tsj_jurisprudencia"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ─── TSJ Jurisprudencia — búsqueda semántica de resoluciones TSJ Bolivia ─────
+  tsj:
+    profiles: ["tsj"]
+    build:
+      context: ../tsj_jurisprudencia
+      dockerfile: Dockerfile
+    container_name: tsj_jurisprudencia
+    restart: unless-stopped
+    env_file:
+      - ../tsj_jurisprudencia/.env          # lee toda la config del .env del proyecto tsj
+    environment:
+      DATABASE_URL: postgresql+psycopg://tsj:tsj@tsj_postgres:5432/tsj_jurisprudencia
+    ports:
+      - "8002:8000"
+    networks:
+      - juridico_net
+    depends_on:
+      tsj_postgres:
+        condition: service_healthy
+
 networks:
   juridico_net:
     driver: bridge
@@ -91,3 +134,4 @@ volumes:
   postgres_data:
   redis_data:
   huggingface_cache:  # modelo multilingual-e5-large (~1.2GB) — persiste entre rebuilds
+  tsj_postgres_data:  # resoluciones TSJ indexadas — persiste entre rebuilds
