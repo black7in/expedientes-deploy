@@ -118,6 +118,8 @@ services:
       - ../tsj_jurisprudencia/.env          # lee toda la config del .env del proyecto tsj
     environment:
       DATABASE_URL: postgresql+psycopg://tsj:tsj@tsj_postgres:5432/tsj_jurisprudencia
+    volumes:
+      - ../tsj_jurisprudencia/tsj_jurisprudencia:/app/tsj_jurisprudencia
     ports:
       - "8002:8000"
     networks:
