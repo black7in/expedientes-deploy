@@ -63,12 +63,10 @@ services:
     environment:
       DATABASE_URL: postgresql://${DB_USERNAME:-laravel}:${DB_PASSWORD:-secret}@postgres:5432/${DB_DATABASE:-expedientes_juridicos}
       STORAGE_PATH: /storage/documentos
-      LLM_PROVIDER: ${LLM_PROVIDER:-anthropic}
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-      LLM_BASE_URL: ${LLM_BASE_URL:-}
-      LLM_MODEL: ${LLM_MODEL:-claude-sonnet-4-6}
+      LLM_MODEL: ${LLM_MODEL:-gpt-4o-mini}
       TRANSFORMERS_CACHE: /app/.cache/huggingface
+      NER_MODEL_PATH: /app/modelo_ner
     volumes:
       - ../expedientes-app/storage/app/documentos:/storage/documentos:ro
       - ../expedientes-ai/app:/app/app
@@ -76,6 +74,7 @@ services:
       - huggingface_cache:/app/.cache/huggingface
       - ../expedientes-app/recursos/leyes:/app/recursos/leyes:ro
       - ../expedientes-ai/recursos/memoriales:/app/recursos/memoriales:ro
+      - ../expedientes-ai/modelo_ner:/app/modelo_ner:ro
     ports:
       - "8001:8000"
     networks:
@@ -118,6 +117,7 @@ services:
       - ../tsj_jurisprudencia/.env          # lee toda la config del .env del proyecto tsj
     environment:
       DATABASE_URL: postgresql+psycopg://tsj:tsj@tsj_postgres:5432/tsj_jurisprudencia
+    command: sh -c "tsj init && tsj serve --host 0.0.0.0 --port 8000 --reload"
     volumes:
       - ../tsj_jurisprudencia/tsj_jurisprudencia:/app/tsj_jurisprudencia
     ports:
