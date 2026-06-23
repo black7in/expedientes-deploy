@@ -34,14 +34,20 @@ cd "$APP_DIR" && git fetch origin && git checkout "$BRANCH_APP" && git pull orig
 echo "→ Pulling expedientes-ai ($BRANCH_AI)..."
 cd "$AI_DIR" && git fetch origin && git checkout "$BRANCH_AI" && git pull origin "$BRANCH_AI"
 
-echo "→ Pulling tsj_jurisprudencia (main)..."
-cd "$TSJ_DIR" && git fetch origin && git checkout main && git pull origin main
+if [ -d "$TSJ_DIR" ]; then
+  echo "→ Pulling tsj_jurisprudencia (main)..."
+  cd "$TSJ_DIR" && git fetch origin && git checkout main && git pull origin main
+  TSJ_SERVICES="tsj tsj_postgres"
+else
+  echo "→ tsj_jurisprudencia no encontrado, omitiendo."
+  TSJ_SERVICES=""
+fi
 
 echo "→ Rebuilding images (con caché)..."
-cd "$DEPLOY_DIR" && docker compose build app queue nginx ai tsj
+cd "$DEPLOY_DIR" && docker compose build app queue nginx ai $TSJ_SERVICES
 
 echo "→ Restarting containers..."
-docker compose up -d app queue nginx ai tsj tsj_postgres
+docker compose up -d app queue nginx ai $TSJ_SERVICES
 
 echo "→ Corriendo migraciones..."
 sleep 5
