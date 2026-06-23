@@ -44,6 +44,8 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       AI_SERVICE_URL: http://ai:8000
+      TSJ_PUBLIC_URL: ${TSJ_PUBLIC_URL:-http://34.68.20.151:8002}
+      TSJ_SERVICE_URL: http://tsj_jurisprudencia:8000
       FILESYSTEM_DISK: local
     networks:
       - juridico_net
