@@ -79,7 +79,7 @@ services:
     restart: unless-stopped
     environment:
       DATABASE_URL: postgresql://${DB_USERNAME:-laravel}:${DB_PASSWORD}@postgres:5432/${DB_DATABASE:-expedientes_juridicos}
-      STORAGE_PATH: /storage/private/documentos
+      STORAGE_PATH: /storage/documentos
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       LLM_MODEL: ${LLM_MODEL:-gpt-4o-mini}
       TRANSFORMERS_CACHE: /app/.cache/huggingface
