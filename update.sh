@@ -34,13 +34,17 @@ cd "$APP_DIR" && git fetch origin && git checkout "$BRANCH_APP" && git pull orig
 echo "→ Pulling expedientes-ai ($BRANCH_AI)..."
 cd "$AI_DIR" && git fetch origin && git checkout "$BRANCH_AI" && git pull origin "$BRANCH_AI"
 
+TSJ_SERVICES=""
 if [ -d "$TSJ_DIR" ]; then
-  echo "→ Pulling tsj_jurisprudencia (main)..."
-  cd "$TSJ_DIR" && git fetch origin && git checkout main && git pull origin main
-  TSJ_SERVICES="tsj tsj_postgres"
+  if docker compose -f "$DEPLOY_DIR/docker-compose.yml" config --services 2>/dev/null | grep -q "^tsj$"; then
+    echo "→ Pulling tsj_jurisprudencia (main)..."
+    cd "$TSJ_DIR" && git fetch origin && git checkout main && git pull origin main
+    TSJ_SERVICES="tsj tsj_postgres"
+  else
+    echo "→ tsj_jurisprudencia encontrado pero servicio no definido en docker-compose, omitiendo."
+  fi
 else
   echo "→ tsj_jurisprudencia no encontrado, omitiendo."
-  TSJ_SERVICES=""
 fi
 
 echo "→ Rebuilding images (con caché)..."
