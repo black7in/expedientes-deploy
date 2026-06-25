@@ -85,7 +85,7 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       LLM_MODEL: ${LLM_MODEL:-gpt-4o-mini}
       TRANSFORMERS_CACHE: /app/.cache/huggingface
-      NER_MODEL_PATH: PlanTL-GOB-ES/roberta-base-bne-capitel-ner
+      NER_MODEL_PATH: mrm8488/bert-spanish-cased-finetuned-ner
     volumes:
       - storage_data:/storage:ro
       - huggingface_cache:/app/.cache/huggingface
